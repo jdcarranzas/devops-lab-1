@@ -93,4 +93,4 @@ jobs:
           STUDENT_SUFFIX: ${{ env.STUDENT_SUFFIX }}
           AWS_REGION: ${{ env.AWS_REGION }}
           IMAGE_URI: ${{ needs.build_and_push.outputs.image_uri }}
-      run: bash scripts/deploy.sh
+        run: bash scripts/deploy.sh
