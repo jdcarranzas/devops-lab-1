@@ -1,0 +1,39 @@
+name: Destroy Cluster
+
+on:
+  workflow_dispatch:
+    inputs:
+      student_suffix:
+        description: 'Student Suffix (e.g. test-student)'
+        required: false
+        type: string
+      confirm:
+        description: 'Escribe DESTROY para confirmar'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  STUDENT_SUFFIX: ${{ inputs.student_suffix || vars.STUDENT_SUFFIX || 'test-student' }}
+  ECR_REPOSITORY: greeting-${{ inputs.student_suffix || vars.STUDENT_SUFFIX || 'test-student' }}
+
+jobs:
+
+  deploy:
+    name: Deploy to ECS on EC2
+    needs: build_and_push
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') ||  github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Run Destroy Script
+        env:
+          STUDENT_SUFFIX: ${{ env.STUDENT_SUFFIX }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          IMAGE_URI: ${{ needs.build_and_push.outputs.image_uri }}
+        run: bash scripts/destroy.sh
